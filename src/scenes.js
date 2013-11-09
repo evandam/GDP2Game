@@ -14,7 +14,7 @@ Crafty.scene('Loading', function () {
 
     // All of the audio/graphics the game will use
     Crafty.load([
-        'assets/items.gif',
+        'assets/hammer.gif',
         'assets/map_sprites.png',
         'assets/falcon.gif',
         'assets/fox.gif',
@@ -31,12 +31,17 @@ Crafty.scene('Loading', function () {
 
         // make the sprites
         // falcon 0,0 = standing left, 1,0 = right, 2,0 = jumping
-        Crafty.sprite(45, 64, 'assets/falcon.gif', {
+        Crafty.sprite(70, 70, 'assets/falcon.gif', {
             falcon_spr: [0, 0]
         });
 
-        Crafty.sprite(44, 50, 'assets/fox.gif', {
+        Crafty.sprite(44, 'assets/fox.gif', {
             fox_spr: [0, 0]
+        });
+
+        // figure out items later
+        Crafty.sprite(40, 'assets/hammer.gif', {
+            hammer_spr : [0, 0]
         });
 
         // assets good to go, play the game!
@@ -54,7 +59,7 @@ Crafty.scene('Loading', function () {
 Crafty.scene('Game', function () {
     // Crafty.audio.play('theme');
 
-    Crafty.background('rgb(0, 50, 0');
+    Crafty.background('rgb(64, 64, 255');
     var map = Crafty.e("2D, DOM, TiledMapBuilder").setMapDataSource(SRC_FROM_TILED)
         .createWorld();
 
@@ -62,9 +67,12 @@ Crafty.scene('Game', function () {
         .at(5, 20);
 
     var p2 = Crafty.e('Player2, CaptainFalcon')
-        .at(Game.map_grid.width - /*15*/ 30, 20);
+        .at(Game.map_grid.width - 15, 20);
 
     p2.flip();   // Start facing left
+
+    // put an item in play
+    // var hammer = Crafty.e('hammer_spr, item, Actor').at(10, 20);
 
     // display players' health
     Crafty.e('p1HealthDisplay, 2D, DOM, Text')
@@ -92,6 +100,19 @@ Crafty.scene('Victory', function () {
     Crafty.background('rgb(255, 255, 0)');
     Crafty.e('2D, DOM, Text')
         .text('You won!!')
+        .attr({
+            x: Game.width() / 2 - 50,
+            y: Game.height() / 2 - 24,
+            w: Game.width()
+        });
+});
+
+// Defeat screen
+Crafty.scene('Defeat', function () {
+    console.log('Defeat scene loaded');
+    Crafty.background('rgb(255, 0, 0)');
+    Crafty.e('2D, DOM, Text')
+        .text('You lost!!')
         .attr({
             x: Game.width() / 2 - 50,
             y: Game.height() / 2 - 24,
