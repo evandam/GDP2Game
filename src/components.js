@@ -73,47 +73,79 @@ Crafty.c('Character', {
 // NOTE: each character must specify the collision component since sprites are not necessarily the same size
 Crafty.c('CaptainFalcon', {
     init: function () {
-        this.requires('Character, falcon_spr, Collision, Twoway')
-            // .twoway(4, 8)  // move and jump
+        this.requires('Character, falcon_spr, Collision')
             .animate('standing', 0, 0, 0)
-            .animate('jumping', 0, 0, 2)
-            .animate('running', 0, 6, 6)
+            .animate('punch', 0, 1, 1)
+            .animate('running', 0, 2, 5)
             .onHit('Character', function (e) {
                 this.stopMovement();
+                if (!this.isAttacking && Math.random() < 0.1)
+                    this.attackPlayer();
+            })
+            .bind('EnterFrame', function() {
+                this.moveTowardsPlayer();
+                // enemy fell of ledge (I don't think this is currently possible
+                // unless player falls off first...
+                if (this._y > Game.height()) {
+                    Crafty.scene('Victory');
+                }
             });
 
-        // Switch animations depending on direction
-        this.bind('NewDirection', function (data) {
-            // it seems like this logic would animate the player jumping/landing...but work on this later
-            if (data.x != 0) {
-                this.animate('running', 4, -1);
-            }
-            else if (data.y > 0) {
-                this.animate('jumping', 0, 0);
-            }
-            else {
-                this.animate('standing', 0, 0);
-            }
-        });
-
         this.bind('HitPlayer2', function (player1) {
-            // this should check if an attack is currently being performed  
+            Crafty.audio.play('punch1');
             player1.isAttacking = false;
-            Crafty.audio.play('punch1');            
             // if the enemy is out of health, you win!
             this.health -= 10;
             if (this.health <= 0) {
                 console.log('victory!');
-                try {
-                    Crafty.scene('Victory');
-                } catch (e) {
-                    console.log(e);
-                }
+                 Crafty.scene('Victory');
+
             }
             else {
                 Crafty('p2HealthDisplay').text('Player 2: ' + this.health);
             }
         });
+
+        this.moveTowardsPlayer = function () {
+            var fox = Crafty('Fox');
+            if (this._x + this._w < fox._x + 1) {
+                if (!this.isPlaying('running') && !this.isPlaying('punch')) {
+                    this.stop();
+                    this.animate('running', 25, -1);
+                }
+                // move right - half speed of fox
+                this.x += 2;
+                this.unflip();
+            }
+            else if (this._x > fox._x + fox._w - 1) {
+                if (!this.isPlaying('running') && !this.isPlaying('punch')) {
+                    this.stop();
+                    this.animate('running', 25, -1);
+                }
+                // move left
+                this.x -= 2;
+                this.flip();
+            }
+            else if (!this.isPlaying('standing') && !this.isPlaying('punch')) {
+                this.animate('standing', 1, 0);
+            }
+        };
+
+        this.attackPlayer = function () {
+            this.isAttacking = true;
+            if (!this.isPlaying('punch')) {
+                this.animate('punch', 30, 0);
+            }
+            Crafty.trigger('Player1Hit', this);
+            // player must hit enemy within half a second for the hit to register
+            var that = this;
+            setTimeout(function () {
+                that.isAttacking = false;
+                if (!that.isPlaying('standing')) {
+                    that.animate('standing', 1, 1);
+                }
+            }, 1000);
+        };
     }
 });
 
@@ -126,18 +158,29 @@ Crafty.c('Fox', {
                 if (this.isAttacking)
                     Crafty.trigger('HitPlayer2', this); 
             })
-            .animate('standing', 0, 1.95, 0)    // i know floating point tile coords aren't the best
+            .animate('standing', 0, 2.2 , 0)    // i know floating point tile coords aren't the best
             .animate('running', 0, 0, 3)        // but the sprite sheet is inconsistent, planning to fix.
-            .animate('kicking', 5, 1.6, 5)
+            .animate('kicking', 5, 2, 5)
             .animate('jumping', 3, 0, 3);
             // Switch animations depending on direction
             this.bind('NewDirection', function (data) {
                 if (data.x != 0) {
-                    this.animate('running', 10, -1);
+                    if(!this.isPlaying('running'))
+                        this.animate('running', 10, -1);
                 }
                 else {
                     this.reset();
                     this.stop();
+                }
+            });
+            // not sure if theres a better way to animate jumping
+            this.bind('EnterFrame', function () {
+                if (this._up) {
+                    this.animate('jumping', 1, 1);
+                }
+                // player fell off map!
+                if (this._y > Game.height()) {
+                    Crafty.scene('Defeat');
                 }
             });
             this.bind('KeyDown', function (data) {
@@ -152,20 +195,20 @@ Crafty.c('Fox', {
                         that.animate('standing', 1, 0);
                     }, 500);
                 }
-                // W - jump - play an animation for 1 second
-                else if (data.key === 87) {
-                    this.animate('jumping', 1, 0);
-                    var that = this;
-                    setTimeout(function () {
-                        that.animate('standing', 1, 0);
-                    }, 1000);
+            });
+            this.bind('Player1Hit', function (player2) {
+                Crafty.audio.play('punch2');
+                this.health -= 10;
+                if (this.health <= 0) {
+                    console.log('defeat!');
+                    Crafty.scene('Defeat');
+
                 }
-                // disable arrow keys
-                else if (data.key >= 37 && data.key <= 40) {
-                    // do nothing! how to stop propagation?
-                    return false;
+                else {
+                    Crafty('p1HealthDisplay').text('Player 1: ' + this.health);
                 }
             });
+        
             this.isAttacking = false;
     }
 });
