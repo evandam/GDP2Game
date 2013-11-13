@@ -20,6 +20,7 @@ Crafty.scene('Loading', function () {
         'assets/fox.gif',
         'assets/punch.wav',
         'assets/kung-fu-punch.wav',
+        'assets/falconpunch.mp3',
         'assets/cool-theme-song.wav'
     ], function (e) {    
         // onLoad - assets are ready to be used
@@ -28,6 +29,7 @@ Crafty.scene('Loading', function () {
         Crafty.audio.add('punch1', 'assets/punch.wav');
         Crafty.audio.add('punch2', 'assets/kung-fu-punch.wav');
         Crafty.audio.add('theme', 'assets/cool-theme-song.wav');
+        Crafty.audio.add('falconpunch', 'assets/falconpunch.mp3');
 
         // make the sprites
         // falcon 0,0 = standing left, 1,0 = right, 2,0 = jumping
@@ -43,9 +45,10 @@ Crafty.scene('Loading', function () {
         Crafty.sprite(40, 'assets/hammer.gif', {
             hammer_spr : [0, 0]
         });
-
-        // assets good to go, play the game!
-        Crafty.scene('Game');
+        
+        // Assets all loaded and good to go. press a key to play!
+        status.text('Assets loaded. Press a key to start!');
+        Crafty.bind('KeyDown', startGame);
     }, function (e) {
         // onProgress
         status.text('Loading game assets! ' + e.percent + '%');
@@ -57,6 +60,7 @@ Crafty.scene('Loading', function () {
 
 // First stage of game
 Crafty.scene('Game', function () {
+    Crafty.unbind('KeyDown', startGame);
     // Crafty.audio.play('theme');
 
     Crafty.background('rgb(64, 64, 255');
@@ -76,7 +80,7 @@ Crafty.scene('Game', function () {
 
     // display players' health
     Crafty.e('p1HealthDisplay, 2D, DOM, Text')
-        .text('Player 1: ' + p1.health)
+        .text('Player 1: ' + p1.health + ' lives: ' + p1.lives)
         .textColor('#ffffff')
         .attr({
             x: 5,
@@ -85,7 +89,7 @@ Crafty.scene('Game', function () {
         });
 
     Crafty.e('p2HealthDisplay, 2D, DOM, Text')
-        .text('Player 2: ' + p2.health)
+        .text('Player 2: ' + p2.health + ' lives: ' + p2.lives)
         .textColor('#ffffff')
         .attr({
             x: Game.width() - 200,
@@ -96,26 +100,36 @@ Crafty.scene('Game', function () {
 
 // Victory screen
 Crafty.scene('Victory', function () {
-    console.log('victory scene loaded');
     Crafty.background('rgb(255, 255, 0)');
     Crafty.e('2D, DOM, Text')
-        .text('You won!!')
+        .text('You won!!\n' +
+                'Press any key to play again!')
         .attr({
             x: Game.width() / 2 - 50,
             y: Game.height() / 2 - 24,
             w: Game.width()
-        });
+        })
+    // restart the game on a keypress
+    Crafty.bind('KeyDown', startGame);
 });
 
 // Defeat screen
 Crafty.scene('Defeat', function () {
-    console.log('Defeat scene loaded');
     Crafty.background('rgb(255, 0, 0)');
     Crafty.e('2D, DOM, Text')
-        .text('You lost!!')
+        .text('You lost!!\n' +
+                'Press any key to play again!')
         .attr({
             x: Game.width() / 2 - 50,
             y: Game.height() / 2 - 24,
             w: Game.width()
-        });
+        })
+    // restart the game on a keypress
+    Crafty.bind('KeyDown', startGame);
 });
+
+// restart the game on any key press
+// Use this function so all of the pointers are the same 
+function startGame() {
+    Crafty.scene('Game');
+}
