@@ -63,7 +63,7 @@ Crafty.scene('Game', function () {
     Crafty.unbind('KeyDown', startGame);
     // Crafty.audio.play('theme');
 
-    Crafty.background('rgb(64, 64, 255');
+    Crafty.background('rgb(64, 64, 255)');
     var map = Crafty.e("2D, DOM, TiledMapBuilder").setMapDataSource(SRC_FROM_TILED)
         .createWorld();
 
